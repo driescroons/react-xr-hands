@@ -1,6 +1,6 @@
 import { useXR, XREvent } from '@react-three/xr'
 import React, { useEffect, useRef, useState } from 'react'
-import { useThree } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { HandModel } from './HandModel'
 import { BoxBufferGeometry, Group, Mesh, MeshBasicMaterial, XRControllerEventType, XRInputSource, XRSession } from 'three'
 import { OculusHandModel } from 'three/examples/jsm/webxr/OculusHandModel'
@@ -55,7 +55,10 @@ export function Hands() {
     controllers.map((c, index) => {
       // if we switch to hands, we need to switch the input controller of the hand model
       // only check if controller input source does not exist on hands yet
-      newHands.push(new HandModel(c.controller, c.inputSource))
+      const model = new HandModel(c.controller, c.inputSource)
+      newHands.push(model)
+      // c.controller.add(model)
+      // scene.add(model)
     })
 
     setHands(newHands)
@@ -104,24 +107,33 @@ export function Hands() {
     // console.log(gl.xr.getSession(), controllers)
   }, [controllers])
 
-  useEffect(() => {
-    console.log('gl state refreshed')
+  // useEffect(() => {
+  //   console.log('gl state refreshed')
+
+  // }, [gl, scene])
+
+  useFrame(() => {
     const session = gl.xr.getSession()
     if (session) {
       // check for isPresenting?
-      console.log('got active session')
-      if (Object.values((session as XRSession).inputSources).some((source) => source.hand !== null)) {
+      // console.log('got active session')
+      // console.log(session)
+      if (Object.values((session as XRSession).inputSources).some((source) => source.hand)) {
+        // console.log('hand trackng enabled')
         setHandTracking(true)
       } else {
+        // console.log('hand trackng disabled')
         setHandTracking(false)
       }
     }
-  }, [gl, scene])
+  })
 
   useEffect(() => {
     if (handTracking) {
       hands.map((hand, index) => {
-        hand.controller = gl.xr.getHand(index)
+        // for some reason the indexes are sometimes inverted, meaning that the hand gets drawn all funky
+        // How do we fix this?
+        hand.controller = gl.xr.getHand(Math.abs(index - 1))
       })
     } else {
       hands.map((hand, index) => {
@@ -159,7 +171,9 @@ export function Hands() {
             <>
               <primitive object={controller.controller}>
                 {/* if not hand tracking render the following */}
+                {/* <group rotation={[Math.PI / 2, 0, 0]}> */}
                 <primitive object={hands[index]} fallback={null} />
+                {/* </group> */}
                 {/* additional stuff that needs to be hidden when palms are upside down (extra ui stuff) */}
                 <mesh>
                   <boxBufferGeometry args={[0.1, 0.1, 0.1]} />
@@ -167,7 +181,7 @@ export function Hands() {
               </primitive>
               {handTracking && (
                 <primitive object={player}>
-                  <primitive object={hands[index]} fallback={null} />
+                  <primitive object={hands[index]} dispose={null} />
                 </primitive>
               )}
             </>
@@ -179,12 +193,4 @@ export function Hands() {
       })}
     </>
   )
-
-  // return (
-  //   <mesh>
-  //     <boxBufferGeometry args={[0.1, 0.1, 0.1]} />
-  //   </mesh>
-  // )
-
-  // return null
 }
