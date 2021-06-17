@@ -47,7 +47,7 @@ class HandModel extends Object3D {
 
   connected: boolean = false
 
-  constructor(controller: Group) {
+  constructor(controller: Group, inputSource: XRInputSource) {
     super()
 
     this.controller = controller
@@ -55,52 +55,55 @@ class HandModel extends Object3D {
 
     console.log('how many times?')
 
-    controller.addEventListener('connected', (event) => {
-      // console.log('controller connected')
-      const inputSource = event.data
+    // controller.addEventListener('connected', (event) => {
+    //   // console.log('controller connected')
+    //   const inputSource = event.data
 
-      console.log(inputSource)
+    // console.log(inputSource)
 
-      // inputSource.hand &&
-      if (!this.connected) {
-        this.inputSource = inputSource
+    // inputSource.hand &&
+    // if (!this.connected) {
+    this.inputSource = inputSource
 
-        const loader = new GLTFLoader()
-        loader.setPath(DEFAULT_HAND_PROFILE_PATH)
-        loader.load(`${this.inputSource.handedness}.glb`, (gltf) => {
-          const object = gltf.scene.children[0]
-          super.add(object)
+    const loader = new GLTFLoader()
+    loader.setPath(DEFAULT_HAND_PROFILE_PATH)
+    loader.load(`${this.inputSource.handedness}.glb`, (gltf) => {
+      const object = gltf.scene.children[0]
+      super.add(object)
 
-          const mesh = object.getObjectByProperty('type', 'SkinnedMesh')! as Mesh
-          mesh.frustumCulled = false
-          mesh.castShadow = true
-          mesh.receiveShadow = true
-          ;(mesh.material as any).side = 0 // Workaround: force FrontSide = 0
+      console.log(object)
+      const mesh = object.getObjectByProperty('type', 'SkinnedMesh')! as Mesh
+      mesh.frustumCulled = false
+      mesh.castShadow = true
+      mesh.receiveShadow = true
+      ;(mesh.material as any).side = 0 // Workaround: force FrontSide = 0
 
-          console.log('adding jopints')
+      console.log('adding jopints')
 
-          XRHandJoints.forEach((jointName: string) => {
-            const bone = object.getObjectByName(jointName)
-            if (bone !== undefined) {
-              ;(bone as any).jointName = jointName
-            } else {
-              console.log(`Couldn't find ${jointName} in ${this.inputSource.handedness} hand mesh`)
-            }
-            this.bones.push(bone!)
-          })
+      XRHandJoints.forEach((jointName: string) => {
+        const bone = object.getObjectByName(jointName)
+        if (bone !== undefined) {
+          ;(bone as any).jointName = jointName
+        } else {
+          console.log(`Couldn't find ${jointName} in ${this.inputSource.handedness} hand mesh`)
+        }
+        this.bones.push(bone!)
+      })
 
-          this.connected = true
-          console.log(this.connected, 'are we though?')
-        })
-
-        // this.motionController = new XRHandMeshModel(this, this.controller, DEFAULT_HAND_PROFILE_PATH, this.inputSource.handedness)
-      }
+      this.connected = true
+      console.log(this.connected, 'are we though?', this.inputSource)
     })
 
-    controller.addEventListener('disconnected', () => {
-      this.clear()
-      // this.motionController = null
-    })
+    // this.motionController = new XRHandMeshModel(this, this.controller, DEFAULT_HAND_PROFILE_PATH, this.inputSource.handedness)
+    // }
+    // })
+
+    // controller.addEventListener('disconnected', () => {
+    //   // what do we do here? do we remove the children if disconnected? no right?
+    //   console.log('this will probably get thrown and you cant see anything onsc reen anymore since controller was disconnected')
+    //   this.clear()
+    //   // this.motionController = null
+    // })
   }
 
   updateMatrixWorld(force: boolean) {
@@ -110,34 +113,21 @@ class HandModel extends Object3D {
     // in menu => pointing, in game => "grabbing mode"
     // console.log('trynna render', this.connected)
     // console.log(this.connected)
+    // console.log(this.connected)
     if (this.connected) {
-      // debugger
-      // this.motionController.updateMesh()
       const XRJoints = (this.controller as any).joints || []
 
       for (let i = 0; i < this.bones.length; i++) {
         const bone = this.bones[i]
-
-        // console.log(bone)
-
         if (bone) {
-          // console.log((bone as any).jointName)
-
           const XRJoint = XRJoints[(bone as any).jointName]
-          // console.log(XRJoint)
-
-          // console.log(XRJoint, XRJoint?.visible)
-
           if (XRJoint?.visible) {
             // console.log('visible')
             const position = XRJoint.position
-
-            if (bone) {
-              // console.log('bone updated')
-              bone.position.copy(position)
-              bone.quaternion.copy(XRJoint.quaternion)
-              // bone.scale.setScalar( XRJoint.jointRadius || defaultRadius );
-            }
+            // console.log('bone updated')
+            bone.position.copy(position)
+            bone.quaternion.copy(XRJoint.quaternion)
+            // bone.scale.setScalar( XRJoint.jointRadius || defaultRadius );
           }
         }
       }
