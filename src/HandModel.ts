@@ -1,4 +1,4 @@
-import { Group, Mesh, MeshBasicMaterial, Object3D, XRInputSource } from 'three'
+import { Group, Mesh, MeshBasicMaterial, Object3D, XRHandedness, XRInputSource } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { XRHandMeshModel } from 'three/examples/jsm/webxr/XRHandMeshModel'
 
@@ -35,7 +35,7 @@ const XRHandJoints = [
   'pinky-finger-tip'
 ]
 
-const modelCache = new WeakMap<XRInputSource, Object3D>()
+const modelCache = new Map<XRHandedness, Object3D>()
 class HandModel extends Object3D {
   controller: Group
   bones: Object3D[] = []
@@ -49,8 +49,8 @@ class HandModel extends Object3D {
     this.controller = controller
     this.inputSource = inputSource
 
-    if (modelCache.has(this.inputSource)) {
-      const object = modelCache.get(this.inputSource)
+    if (modelCache.has(this.inputSource.handedness)) {
+      const object = modelCache.get(this.inputSource.handedness)
       this.init(object!)
     } else {
       const loader = new GLTFLoader()
@@ -58,7 +58,7 @@ class HandModel extends Object3D {
       console.log('GONNA LOAD SOME SHIT')
       loader.load(`${this.inputSource.handedness}.glb`, (gltf) => {
         const object = gltf.scene.children[0]
-        modelCache.set(this.inputSource, object)
+        modelCache.set(this.inputSource.handedness, object)
         this.init(object)
       })
     }
