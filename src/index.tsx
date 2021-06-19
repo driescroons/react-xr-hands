@@ -1,11 +1,12 @@
-import ReactDOM from 'react-dom'
-import React from 'react'
-import { VRCanvas } from '@react-three/xr'
-import { OrbitControls } from '@react-three/drei'
 import './styles.css'
-import { Hands } from './Hands'
+
+import { OrbitControls } from '@react-three/drei'
+import { VRCanvas } from '@react-three/xr'
+import React from 'react'
+import ReactDOM from 'react-dom'
 import { VRButton } from 'three/examples/jsm/webxr/VRButton'
-import { BoxBufferGeometry, MeshBasicMaterial } from 'three'
+
+import { Hands } from './Hands'
 
 // Oculus Browser with #webxr-hands flag enabled
 function App() {
@@ -18,9 +19,6 @@ function App() {
       <OrbitControls />
       <ambientLight />
       <pointLight position={[10, 10, 10]} />
-      <mesh geometry={new BoxBufferGeometry(0.1, 0.1, 0.1)} material={new MeshBasicMaterial({ color: 'red' })} position={[0, 0, 0]} />
-      {/* <DefaultXRControllers /> */}
-      {/* <Hands /> */}
       <Hands />
     </VRCanvas>
   )
