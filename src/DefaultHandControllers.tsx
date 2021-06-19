@@ -1,43 +1,45 @@
-import { useThree } from '@react-three/fiber'
 import { useXR } from '@react-three/xr'
 import React, { useEffect, useRef, useState } from 'react'
 import { BoxBufferGeometry, Mesh } from 'three'
 
 import { HandModel } from './HandModel'
 
-export function Hands() {
-  const { gl, scene } = useThree()
-  const { controllers, player, isPresenting, isHandTracking } = useXR()
+export function DefaultHandControllers() {
+  const { controllers, isHandTracking } = useXR()
 
-  const [models, setModels] = useState<HandModel[]>([])
+  const models = useRef<HandModel[]>([])
 
   useEffect(() => {
-    if (models.length === 0) {
+    if (models.current.length === 0) {
       const handModels: HandModel[] = []
       controllers.map((c) => {
         c.controller.add(new Mesh(new BoxBufferGeometry(0.1, 0.1, 0.1)))
         handModels.push(new HandModel(c.controller, c.inputSource))
       })
-      setModels(handModels)
+      models.current = handModels
     }
   }, [controllers])
 
   useEffect(() => {
-    if (models.length === controllers.length) {
-      controllers.map((c, index) => {
-        let model = models[index]
+    // fix this firing twice when going in vr mode
+    if (models.current.length === controllers.length) {
+      controllers.forEach((c, index) => {
+        let model = models.current[index]
         if (isHandTracking) {
           c.controller.remove(model)
-          model = new HandModel(c.hand, c.inputSource)
+          model.controller = c.hand
+          model.load()
           c.hand.add(model)
         } else {
           c.hand.remove(model)
-          model = new HandModel(c.controller, c.inputSource)
+          model.controller = c.controller
+          model.load()
           c.controller.add(model)
         }
+        models.current[index] = model
       })
     }
-  }, [controllers, isHandTracking, models])
+  }, [controllers, isHandTracking])
 
   return null
 }

@@ -6,7 +6,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { VRButton } from 'three/examples/jsm/webxr/VRButton'
 
-import { Hands } from './Hands'
+import { DefaultHandControllers } from './DefaultHandControllers'
 
 // Oculus Browser with #webxr-hands flag enabled
 function App() {
@@ -19,7 +19,7 @@ function App() {
       <OrbitControls />
       <ambientLight />
       <pointLight position={[10, 10, 10]} />
-      <Hands />
+      <DefaultHandControllers />
     </VRCanvas>
   )
 }

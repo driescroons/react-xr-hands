@@ -1,6 +1,5 @@
-import { Group, Mesh, MeshBasicMaterial, Object3D, XRHandedness, XRInputSource } from 'three'
+import { Group, Mesh, Object3D, XRHandedness, XRInputSource } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { XRHandMeshModel } from 'three/examples/jsm/webxr/XRHandMeshModel'
 
 const DEFAULT_HAND_PROFILE_PATH = 'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0/dist/profiles/generic-hand/'
 
@@ -49,13 +48,16 @@ class HandModel extends Object3D {
     this.controller = controller
     this.inputSource = inputSource
 
+    this.load()
+  }
+
+  load() {
     if (modelCache.has(this.inputSource.handedness)) {
       const object = modelCache.get(this.inputSource.handedness)
       this.init(object!)
     } else {
       const loader = new GLTFLoader()
       loader.setPath(DEFAULT_HAND_PROFILE_PATH)
-      console.log('GONNA LOAD SOME SHIT')
       loader.load(`${this.inputSource.handedness}.glb`, (gltf) => {
         const object = gltf.scene.children[0]
         modelCache.set(this.inputSource.handedness, object)
@@ -72,6 +74,7 @@ class HandModel extends Object3D {
     mesh.receiveShadow = true
     ;(mesh.material as any).side = 0 // Workaround: force FrontSide = 0
 
+    this.bones = []
     XRHandJoints.forEach((jointName: string) => {
       const bone = object.getObjectByName(jointName)
       if (bone !== undefined) {
