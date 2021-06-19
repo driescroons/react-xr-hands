@@ -65,6 +65,7 @@ class HandModel extends Object3D {
 
     const loader = new GLTFLoader()
     loader.setPath(DEFAULT_HAND_PROFILE_PATH)
+    console.log('GONNA LOAD SOME SHIT')
     loader.load(`${this.inputSource.handedness}.glb`, (gltf) => {
       const object = gltf.scene.children[0]
       super.add(object)
