@@ -53,8 +53,6 @@ class HandModel extends Object3D {
     this.controller = controller
     this.motionController = null
 
-    console.log('how many times?')
-
     // controller.addEventListener('connected', (event) => {
     //   // console.log('controller connected')
     //   const inputSource = event.data
@@ -71,14 +69,11 @@ class HandModel extends Object3D {
       const object = gltf.scene.children[0]
       super.add(object)
 
-      console.log(object)
       const mesh = object.getObjectByProperty('type', 'SkinnedMesh')! as Mesh
       mesh.frustumCulled = false
       mesh.castShadow = true
       mesh.receiveShadow = true
       ;(mesh.material as any).side = 0 // Workaround: force FrontSide = 0
-
-      console.log('adding jopints')
 
       XRHandJoints.forEach((jointName: string) => {
         const bone = object.getObjectByName(jointName)
@@ -91,7 +86,6 @@ class HandModel extends Object3D {
       })
 
       this.connected = true
-      console.log(this.connected, 'are we though?', this.inputSource)
     })
 
     // this.motionController = new XRHandMeshModel(this, this.controller, DEFAULT_HAND_PROFILE_PATH, this.inputSource.handedness)

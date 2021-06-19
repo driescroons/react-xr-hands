@@ -1,6 +1,7 @@
 import ReactDOM from 'react-dom'
 import React from 'react'
 import { VRCanvas } from '@react-three/xr'
+import { OrbitControls } from '@react-three/drei'
 import './styles.css'
 import { Hands } from './Hands'
 import { VRButton } from 'three/examples/jsm/webxr/VRButton'
@@ -14,9 +15,10 @@ function App() {
         args.gl.setClearColor('grey')
         void document.body.appendChild(VRButton.createButton(args.gl))
       }}>
+      <OrbitControls />
       <ambientLight />
       <pointLight position={[10, 10, 10]} />
-      <mesh geometry={new BoxBufferGeometry(0.1, 0.1, 0.1)} material={new MeshBasicMaterial({ color: 'red' })} position={[0, 0, -2]} />
+      <mesh geometry={new BoxBufferGeometry(0.1, 0.1, 0.1)} material={new MeshBasicMaterial({ color: 'red' })} position={[0, 0, 0]} />
       {/* <DefaultXRControllers /> */}
       {/* <Hands /> */}
       <Hands />
