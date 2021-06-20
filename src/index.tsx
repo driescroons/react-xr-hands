@@ -1,14 +1,13 @@
 import './styles.css'
 
 import { OrbitControls } from '@react-three/drei'
-import { VRCanvas, Hands } from '@react-three/xr'
+import { Hands, VRCanvas } from '@react-three/xr'
 import React from 'react'
 import ReactDOM from 'react-dom'
+import { BrowserRouter as Router, Link, Redirect, Route } from 'react-router-dom'
 import { VRButton } from 'three/examples/jsm/webxr/VRButton'
 
 import { DefaultHandControllers } from './DefaultHandControllers'
-
-import { BrowserRouter as Router, Switch, Route, Link, Redirect } from 'react-router-dom'
 
 // Oculus Browser with #webxr-hands flag enabled
 function HandControllersExample() {

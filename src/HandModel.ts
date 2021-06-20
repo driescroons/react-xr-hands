@@ -78,8 +78,6 @@ class HandModel extends Object3D {
   getJoints = () => {
     if (this.inputSource.handedness === 'right') {
       const joints = (this.controller as any).joints || {}
-      // console.log(joints, this.inputSource)
-      // console.log(JSON.stringify(joints))
 
       if (Object.keys(joints).length > 0) {
         const posDif = joints['wrist'].position
@@ -99,8 +97,6 @@ class HandModel extends Object3D {
         }, {})
 
         console.log(JSON.stringify(formatted))
-
-        // now mirror for the other hand
       }
     }
   }
@@ -108,29 +104,13 @@ class HandModel extends Object3D {
   setPose(poseType: XRPose = 'idle') {
     if (!this.isHandTracking) {
       const pose = poses[poseType]
-      // const posDif = new Vector3().fromArray(idle.wrist.position)
       for (let i = 0; i < this.bones.length; i++) {
         const bone = this.bones[i]
         if (bone) {
           const joint = pose[(bone as any).jointName]
-          // console.log(posDif)
-
-          // console.log(joint)
-          // const XRJoint = ((this.controller as any)?.joints || [])[(bone as any).jointName]
-          // if (XRJoint?.visible) {
           const position = joint.position
           bone.position.copy(new Vector3().fromArray(position))
           bone.quaternion.copy(new Quaternion().fromArray(joint.quaternion))
-
-          // if (this.inputSource.handedness === 'left') {
-          // bone.applyMatrix4(new Matrix4().makeScale(-1, 1, 1))
-
-          // bone.scale.set(-1, 1, 1);
-          // bone.quaternion.invert();
-          // }
-
-          // console.log(bone)
-          // }
         }
       }
     }
@@ -149,7 +129,6 @@ class HandModel extends Object3D {
     const fileHandedness = isHandTracking ? this.inputSource.handedness : 'right'
     loader.load(`${fileHandedness}.glb`, (gltf) => {
       this.model = gltf.scene.children[0]
-      // const object = gltf.scene.children[0]
       super.add(this.model)
 
       const mesh = this.model.getObjectByProperty('type', 'SkinnedMesh')! as Mesh
@@ -188,10 +167,6 @@ class HandModel extends Object3D {
       if (!isHandTracking) {
         this.setPose('idle')
 
-        // this.rotateOnAxis(new Vector3(1, 0, 0), Math.PI / 2)
-        // this.rotateOnAxis(new Vector3(0, 1, 0), -Math.PI / 2)
-
-        // this.rotateX(Math.PI / 2)
         this.model.setRotationFromEuler(new Euler(Math.PI / 2, -Math.PI / 2, 0))
 
         // only mirror the left one (this is also the right model here)
