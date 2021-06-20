@@ -1,5 +1,5 @@
 import { XRController } from '@react-three/xr'
-import { Group, Matrix4, Mesh, Object3D, ObjectLoader, Quaternion, Vector2, Vector3, XRHandedness, XRInputSource } from 'three'
+import { Euler, Group, Matrix4, Mesh, Object3D, ObjectLoader, Quaternion, Vector2, Vector3, XRHandedness, XRInputSource } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { idlePose } from './poses/idle'
 import { pinchPose } from './poses/pinch'
@@ -187,6 +187,14 @@ class HandModel extends Object3D {
 
       if (!isHandTracking) {
         this.setPose('idle')
+
+        // this.rotateOnAxis(new Vector3(1, 0, 0), Math.PI / 2)
+        // this.rotateOnAxis(new Vector3(0, 1, 0), -Math.PI / 2)
+
+        // this.rotateX(Math.PI / 2)
+        this.setRotationFromEuler(new Euler(Math.PI / 2, -Math.PI / 2, 0))
+
+        // only mirror the left one (this is also the right model here)
         if (this.inputSource.handedness === 'left') {
           this.applyMatrix4(new Matrix4().makeScale(-1, 1, 1))
         }
