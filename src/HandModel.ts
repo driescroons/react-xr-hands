@@ -63,44 +63,6 @@ class HandModel extends Object3D {
     this.inputSource = inputSource
   }
 
-  // onSelectStart = (e: Event & { data: XRInputSource; target: Group }) => {
-  //   console.log(this.inputSource, this.uuid, e.data.handedness, e.target.uuid)
-  //   if (this.inputSource.handedness === e.data.handedness) {
-  //     console.log('eventje gelegd', e)
-  //   }
-  // }
-
-  // if (!this.controller.hasEventListener('selectstart', this.onSelectStart)) {
-  //   console.log('registered event', this.inputSource)
-  //   this.controller.addEventListener('selectstart', this.onSelectStart)
-  // }
-
-  getJoints = () => {
-    if (this.inputSource.handedness === 'right') {
-      const joints = (this.controller as any).joints || {}
-
-      if (Object.keys(joints).length > 0) {
-        const posDif = joints['wrist'].position
-
-        console.log(posDif)
-
-        const formatted = Object.keys(joints).reduce((obj, key) => {
-          console.log(key, joints[key], joints[key].position)
-
-          const joint = joints[key]
-          obj[key] = {
-            position: joint.position.clone().sub(posDif).toArray(),
-            quaternion: joint.quaternion.toArray()
-          }
-
-          return obj
-        }, {})
-
-        console.log(JSON.stringify(formatted))
-      }
-    }
-  }
-
   setPose(poseType: XRPose = 'idle') {
     if (!this.isHandTracking) {
       const pose = poses[poseType]
@@ -147,22 +109,6 @@ class HandModel extends Object3D {
         }
         this.bones.push(bone!)
       })
-
-      // const defaultPose = XRHandJoints.reduce((obj, joint) => {
-      //   const bone = this.model.getObjectByName(joint)
-
-      //   if (bone) {
-      //     obj[joint] = {
-      //       position: bone.position.toArray(),
-      //       quaternion: bone.quaternion.toArray()
-      //     }
-      //   }
-
-      //   return obj
-      // }, {})
-
-      // console.log(this.inputSource)
-      // console.log(JSON.stringify(defaultPose))
 
       if (!isHandTracking) {
         this.setPose('idle')

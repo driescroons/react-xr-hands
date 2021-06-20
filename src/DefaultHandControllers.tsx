@@ -14,14 +14,12 @@ export function DefaultHandControllers() {
     controllers.map((c) => {
       let model = models.current.find((model) => model.inputSource.handedness === c.inputSource.handedness)
       if (!model) {
-        // c.controller.add(new Mesh(new BoxBufferGeometry(0.1, 0.1, 0.1)))
         models.current.push(new HandModel(c.controller, c.inputSource))
       }
     })
   }, [controllers])
 
   useEffect(() => {
-    // fix this firing twice when going in vr mode
     if (isPresenting && models.current.length === controllers.length) {
       controllers.forEach((c, index) => {
         let model = models.current[index]
@@ -47,30 +45,17 @@ export function DefaultHandControllers() {
   })
 
   useXREvent('selectstart', (e: XREvent) => {
-    console.log('started', e)
-    // TEMP
-    // models.current.map((model) => {
-    // model.getJoints()
-    // })
-
     const model = models.current.find((model) => model.inputSource.handedness === e.controller.inputSource.handedness)
     if (model) {
       model.setPose('pinch')
     }
-
-    // const model = models.current.find(model => model.inputSource.handedness === e.controller.inputSource.handedness);
-    // model.setPose(HandPose.idle);
   })
 
   useXREvent('selectend', (e: XREvent) => {
-    console.log('ENDED', e)
-
     const model = models.current.find((model) => model.inputSource.handedness === e.controller.inputSource.handedness)
     if (model) {
       model.setPose('idle')
     }
-    //     const model = models.current.find(model => model.inputSource.handedness === e.controller.inputSource.handedness);
-    // model.setPose(HandPose.select);
   })
 
   return null
