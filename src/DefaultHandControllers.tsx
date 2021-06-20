@@ -11,7 +11,6 @@ export function DefaultHandControllers() {
   const models = useRef<HandModel[]>([])
 
   useEffect(() => {
-    console.log('only now adding stuff?')
     if (models.current.length === 0) {
       const handModels: HandModel[] = []
       controllers.map((c) => {
@@ -24,7 +23,6 @@ export function DefaultHandControllers() {
 
   useEffect(() => {
     // fix this firing twice when going in vr mode
-    console.log('how many times loaded?', isPresenting, models.current.length === controllers.length)
     if (isPresenting && models.current.length === controllers.length) {
       controllers.forEach((c, index) => {
         let model = models.current[index]
