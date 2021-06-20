@@ -15,7 +15,7 @@ export function DefaultHandControllers() {
       let model = models.current.find((model) => model.inputSource.handedness === c.inputSource.handedness)
       if (!model) {
         // c.controller.add(new Mesh(new BoxBufferGeometry(0.1, 0.1, 0.1)))
-        models.current.push(new HandModel(c.controller, c.inputSource))
+        models.current.push(new HandModel())
       }
     })
   }, [controllers])
@@ -26,9 +26,9 @@ export function DefaultHandControllers() {
       controllers.forEach((c, index) => {
         let model = models.current[index]
         if (isHandTracking) {
-          model.load(c.hand, c.inputSource)
+          model.load(c.hand, c.inputSource, true)
         } else {
-          model.load(c.controller, c.inputSource)
+          model.load(c.controller, c.inputSource, false)
         }
         models.current[index] = model
       })

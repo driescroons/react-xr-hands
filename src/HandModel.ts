@@ -1,8 +1,8 @@
 import { XRController } from '@react-three/xr'
-import { Group, Mesh, Object3D, ObjectLoader, Quaternion, Vector2, Vector3, XRHandedness, XRInputSource } from 'three'
+import { Group, Matrix4, Mesh, Object3D, ObjectLoader, Quaternion, Vector2, Vector3, XRHandedness, XRInputSource } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { rightDefault } from './poses/right/default'
-import { rightIdle } from './poses/right/idle'
+import { rightDefault } from './poses/default'
+import { rightIdle } from './poses/idle'
 
 const DEFAULT_HAND_PROFILE_PATH = 'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0/dist/profiles/generic-hand/'
 
@@ -45,14 +45,10 @@ class HandModel extends Object3D {
   path: string
 
   model: Object3D
+  isHandTracking: boolean
 
-  constructor(controller: Group, inputSource: XRInputSource) {
+  constructor() {
     super()
-
-    this.controller = controller
-    this.inputSource = inputSource
-
-    // this.load()
   }
 
   // onSelectStart = (e: Event & { data: XRInputSource; target: Group }) => {
@@ -98,36 +94,51 @@ class HandModel extends Object3D {
   }
 
   setPose() {
-    // const posDif = new Vector3().fromArray(rightIdle.wrist.position)
-    for (let i = 0; i < this.bones.length; i++) {
-      const bone = this.bones[i]
-      if (bone) {
-        const joint = rightIdle[(bone as any).jointName]
-        // console.log(posDif)
+    if (!this.isHandTracking) {
+      // const posDif = new Vector3().fromArray(rightIdle.wrist.position)
+      for (let i = 0; i < this.bones.length; i++) {
+        const bone = this.bones[i]
+        if (bone) {
+          const joint = rightIdle[(bone as any).jointName]
+          // console.log(posDif)
 
-        // console.log(joint)
-        // const XRJoint = ((this.controller as any)?.joints || [])[(bone as any).jointName]
-        // if (XRJoint?.visible) {
-        const position = joint.position
-        bone.position.copy(new Vector3().fromArray(position))
-        bone.quaternion.copy(new Quaternion().fromArray(joint.quaternion))
+          // console.log(joint)
+          // const XRJoint = ((this.controller as any)?.joints || [])[(bone as any).jointName]
+          // if (XRJoint?.visible) {
+          const position = joint.position
+          bone.position.copy(new Vector3().fromArray(position))
+          bone.quaternion.copy(new Quaternion().fromArray(joint.quaternion))
 
-        // console.log(bone)
-        // }
+          // if (this.inputSource.handedness === 'left') {
+          // bone.applyMatrix4(new Matrix4().makeScale(-1, 1, 1))
+
+          // bone.scale.set(-1, 1, 1);
+          // bone.quaternion.invert();
+          // }
+
+          // console.log(bone)
+          // }
+        }
+      }
+
+      if (this.inputSource.handedness === 'left') {
+        this.applyMatrix4(new Matrix4().makeScale(-1, 1, 1))
       }
     }
   }
 
-  load(controller: Group, inputSource: XRInputSource) {
+  load(controller: Group, inputSource: XRInputSource, isHandTracking: boolean) {
     this.controller.remove(this)
 
     this.controller = controller
     this.inputSource = inputSource
+    this.isHandTracking = isHandTracking
 
     super.clear()
     const loader = new GLTFLoader()
     loader.setPath(DEFAULT_HAND_PROFILE_PATH)
-    loader.load(`${this.inputSource.handedness}.glb`, (gltf) => {
+    const fileHandedness = isHandTracking ? this.inputSource.handedness : 'right'
+    loader.load(`${fileHandedness}.glb`, (gltf) => {
       this.model = gltf.scene.children[0]
       // const object = gltf.scene.children[0]
       super.add(this.model)
