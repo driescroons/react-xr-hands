@@ -1,4 +1,4 @@
-export const rightIdle = {
+export const idlePose = {
   wrist: { position: [0, 0, 0], quaternion: [-0.6661913377195962, -0.01640709815701443, -0.11120849576590103, 0.7372601841595182] },
   'thumb-metacarpal': {
     position: [-0.03472973685711622, -0.03378564119338989, 0.010930486023426056],

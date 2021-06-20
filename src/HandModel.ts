@@ -1,8 +1,9 @@
 import { XRController } from '@react-three/xr'
 import { Group, Matrix4, Mesh, Object3D, ObjectLoader, Quaternion, Vector2, Vector3, XRHandedness, XRInputSource } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { rightDefault } from './poses/default'
-import { rightIdle } from './poses/idle'
+import { idlePose } from './poses/idle'
+import { pinchPose } from './poses/pinch'
+import { defaultPose } from './poses/default'
 
 const DEFAULT_HAND_PROFILE_PATH = 'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0/dist/profiles/generic-hand/'
 
@@ -37,6 +38,14 @@ const XRHandJoints = [
   'pinky-finger-tip'
 ]
 
+export type XRPose = 'pinch' | 'idle' | 'default'
+
+const poses: { [key in XRPose]: object } = {
+  idle: idlePose,
+  pinch: pinchPose,
+  default: defaultPose
+}
+
 class HandModel extends Object3D {
   controller: Group
   bones: Object3D[] = []
@@ -47,8 +56,11 @@ class HandModel extends Object3D {
   model: Object3D
   isHandTracking: boolean
 
-  constructor() {
+  constructor(controller: Group, inputSource: XRInputSource) {
     super()
+
+    this.controller = controller
+    this.inputSource = inputSource
   }
 
   // onSelectStart = (e: Event & { data: XRInputSource; target: Group }) => {
@@ -93,13 +105,14 @@ class HandModel extends Object3D {
     }
   }
 
-  setPose() {
+  setPose(poseType: XRPose = 'idle') {
     if (!this.isHandTracking) {
-      // const posDif = new Vector3().fromArray(rightIdle.wrist.position)
+      const pose = poses[poseType]
+      // const posDif = new Vector3().fromArray(idle.wrist.position)
       for (let i = 0; i < this.bones.length; i++) {
         const bone = this.bones[i]
         if (bone) {
-          const joint = rightIdle[(bone as any).jointName]
+          const joint = pose[(bone as any).jointName]
           // console.log(posDif)
 
           // console.log(joint)
@@ -119,10 +132,6 @@ class HandModel extends Object3D {
           // console.log(bone)
           // }
         }
-      }
-
-      if (this.inputSource.handedness === 'left') {
-        this.applyMatrix4(new Matrix4().makeScale(-1, 1, 1))
       }
     }
   }
@@ -160,23 +169,28 @@ class HandModel extends Object3D {
         this.bones.push(bone!)
       })
 
-      const defaultPose = XRHandJoints.reduce((obj, joint) => {
-        const bone = this.model.getObjectByName(joint)
+      // const defaultPose = XRHandJoints.reduce((obj, joint) => {
+      //   const bone = this.model.getObjectByName(joint)
 
-        if (bone) {
-          obj[joint] = {
-            position: bone.position.toArray(),
-            quaternion: bone.quaternion.toArray()
-          }
+      //   if (bone) {
+      //     obj[joint] = {
+      //       position: bone.position.toArray(),
+      //       quaternion: bone.quaternion.toArray()
+      //     }
+      //   }
+
+      //   return obj
+      // }, {})
+
+      // console.log(this.inputSource)
+      // console.log(JSON.stringify(defaultPose))
+
+      if (!isHandTracking) {
+        this.setPose('idle')
+        if (this.inputSource.handedness === 'left') {
+          this.applyMatrix4(new Matrix4().makeScale(-1, 1, 1))
         }
-
-        return obj
-      }, {})
-
-      console.log(this.inputSource)
-      console.log(JSON.stringify(defaultPose))
-
-      this.setPose()
+      }
 
       this.controller.add(this)
     })

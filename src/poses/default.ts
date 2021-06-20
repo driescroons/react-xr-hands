@@ -1,4 +1,4 @@
-export const rightDefault = {
+export const defaultPose = {
   wrist: {
     position: [1.8626447606528984e-10, -8.940696516468449e-10, 5.96046212386625e-10],
     quaternion: [-0.7071068286895752, 5.760118781950041e-8, 5.760119137221409e-8, 0.7071068286895752]

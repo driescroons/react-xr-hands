@@ -15,7 +15,7 @@ export function DefaultHandControllers() {
       let model = models.current.find((model) => model.inputSource.handedness === c.inputSource.handedness)
       if (!model) {
         // c.controller.add(new Mesh(new BoxBufferGeometry(0.1, 0.1, 0.1)))
-        models.current.push(new HandModel())
+        models.current.push(new HandModel(c.controller, c.inputSource))
       }
     })
   }, [controllers])
@@ -26,9 +26,9 @@ export function DefaultHandControllers() {
       controllers.forEach((c, index) => {
         let model = models.current[index]
         if (isHandTracking) {
-          model.load(c.hand, c.inputSource, true)
+          model.load(c.hand, c.inputSource, isHandTracking)
         } else {
-          model.load(c.controller, c.inputSource, false)
+          model.load(c.controller, c.inputSource, isHandTracking)
         }
         models.current[index] = model
       })
@@ -49,15 +49,26 @@ export function DefaultHandControllers() {
   useXREvent('selectstart', (e: XREvent) => {
     console.log('started', e)
     // TEMP
-    models.current.map((model) => {
-      model.getJoints()
-    })
+    // models.current.map((model) => {
+    // model.getJoints()
+    // })
+
+    const model = models.current.find((model) => model.inputSource.handedness === e.controller.inputSource.handedness)
+    if (model) {
+      model.setPose('pinch')
+    }
+
     // const model = models.current.find(model => model.inputSource.handedness === e.controller.inputSource.handedness);
     // model.setPose(HandPose.idle);
   })
 
   useXREvent('selectend', (e: XREvent) => {
     console.log('ENDED', e)
+
+    const model = models.current.find((model) => model.inputSource.handedness === e.controller.inputSource.handedness)
+    if (model) {
+      model.setPose('idle')
+    }
     //     const model = models.current.find(model => model.inputSource.handedness === e.controller.inputSource.handedness);
     // model.setPose(HandPose.select);
   })
