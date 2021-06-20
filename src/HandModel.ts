@@ -1,6 +1,8 @@
 import { XRController } from '@react-three/xr'
-import { Group, Mesh, Object3D, XRHandedness, XRInputSource } from 'three'
+import { Group, Mesh, Object3D, ObjectLoader, Quaternion, Vector2, Vector3, XRHandedness, XRInputSource } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { rightDefault } from './poses/right/default'
+import { rightIdle } from './poses/right/idle'
 
 const DEFAULT_HAND_PROFILE_PATH = 'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@1.0/dist/profiles/generic-hand/'
 
@@ -42,6 +44,8 @@ class HandModel extends Object3D {
   inputSource: XRInputSource
   path: string
 
+  model: Object3D
+
   constructor(controller: Group, inputSource: XRInputSource) {
     super()
 
@@ -49,11 +53,6 @@ class HandModel extends Object3D {
     this.inputSource = inputSource
 
     // this.load()
-    // ;(window as any).getJoints = () => {
-    //   const joints = (this.controller as any).joints || []
-    //   console.log(joints, this.inputSource)
-    //   console.log(JSON.stringify(joints))
-    // }
   }
 
   // onSelectStart = (e: Event & { data: XRInputSource; target: Group }) => {
@@ -68,6 +67,57 @@ class HandModel extends Object3D {
   //   this.controller.addEventListener('selectstart', this.onSelectStart)
   // }
 
+  getJoints = () => {
+    if (this.inputSource.handedness === 'right') {
+      const joints = (this.controller as any).joints || {}
+      // console.log(joints, this.inputSource)
+      // console.log(JSON.stringify(joints))
+
+      if (Object.keys(joints).length > 0) {
+        const posDif = joints['wrist'].position
+
+        console.log(posDif)
+
+        const formatted = Object.keys(joints).reduce((obj, key) => {
+          console.log(key, joints[key], joints[key].position)
+
+          const joint = joints[key]
+          obj[key] = {
+            position: joint.position.clone().sub(posDif).toArray(),
+            quaternion: joint.quaternion.toArray()
+          }
+
+          return obj
+        }, {})
+
+        console.log(JSON.stringify(formatted))
+
+        // now mirror for the other hand
+      }
+    }
+  }
+
+  setPose() {
+    // const posDif = new Vector3().fromArray(rightIdle.wrist.position)
+    for (let i = 0; i < this.bones.length; i++) {
+      const bone = this.bones[i]
+      if (bone) {
+        const joint = rightIdle[(bone as any).jointName]
+        // console.log(posDif)
+
+        // console.log(joint)
+        // const XRJoint = ((this.controller as any)?.joints || [])[(bone as any).jointName]
+        // if (XRJoint?.visible) {
+        const position = joint.position
+        bone.position.copy(new Vector3().fromArray(position))
+        bone.quaternion.copy(new Quaternion().fromArray(joint.quaternion))
+
+        // console.log(bone)
+        // }
+      }
+    }
+  }
+
   load(controller: Group, inputSource: XRInputSource) {
     this.controller.remove(this)
 
@@ -78,9 +128,11 @@ class HandModel extends Object3D {
     const loader = new GLTFLoader()
     loader.setPath(DEFAULT_HAND_PROFILE_PATH)
     loader.load(`${this.inputSource.handedness}.glb`, (gltf) => {
-      const object = gltf.scene.children[0]
-      super.add(object)
-      const mesh = object.getObjectByProperty('type', 'SkinnedMesh')! as Mesh
+      this.model = gltf.scene.children[0]
+      // const object = gltf.scene.children[0]
+      super.add(this.model)
+
+      const mesh = this.model.getObjectByProperty('type', 'SkinnedMesh')! as Mesh
       mesh.frustumCulled = false
       mesh.castShadow = true
       mesh.receiveShadow = true
@@ -88,7 +140,7 @@ class HandModel extends Object3D {
 
       this.bones = []
       XRHandJoints.forEach((jointName: string) => {
-        const bone = object.getObjectByName(jointName)
+        const bone = this.model.getObjectByName(jointName)
         if (bone !== undefined) {
           ;(bone as any).jointName = jointName
         } else {
@@ -96,6 +148,24 @@ class HandModel extends Object3D {
         }
         this.bones.push(bone!)
       })
+
+      const defaultPose = XRHandJoints.reduce((obj, joint) => {
+        const bone = this.model.getObjectByName(joint)
+
+        if (bone) {
+          obj[joint] = {
+            position: bone.position.toArray(),
+            quaternion: bone.quaternion.toArray()
+          }
+        }
+
+        return obj
+      }, {})
+
+      console.log(this.inputSource)
+      console.log(JSON.stringify(defaultPose))
+
+      this.setPose()
 
       this.controller.add(this)
     })
