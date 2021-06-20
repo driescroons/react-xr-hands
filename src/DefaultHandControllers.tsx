@@ -11,14 +11,13 @@ export function DefaultHandControllers() {
   const models = useRef<HandModel[]>([])
 
   useEffect(() => {
-    if (models.current.length === 0) {
-      const handModels: HandModel[] = []
-      controllers.map((c) => {
+    controllers.map((c) => {
+      let model = models.current.find((model) => model.inputSource.handedness === c.inputSource.handedness)
+      if (!model) {
         c.controller.add(new Mesh(new BoxBufferGeometry(0.1, 0.1, 0.1)))
-        handModels.push(new HandModel(c.controller, c.inputSource))
-      })
-      models.current = handModels
-    }
+        models.current.push(new HandModel(c.controller, c.inputSource))
+      }
+    })
   }, [controllers])
 
   useEffect(() => {
@@ -27,15 +26,9 @@ export function DefaultHandControllers() {
       controllers.forEach((c, index) => {
         let model = models.current[index]
         if (isHandTracking) {
-          c.controller.remove(model)
-          model.controller = c.hand
-          model.load()
-          c.hand.add(model)
+          model.load(c.hand, c.inputSource)
         } else {
-          c.hand.remove(model)
-          model.controller = c.controller
-          model.load()
-          c.controller.add(model)
+          model.load(c.controller, c.inputSource)
         }
         models.current[index] = model
       })
@@ -53,10 +46,14 @@ export function DefaultHandControllers() {
 
   useXREvent('selectstart', (e: XREvent) => {
     console.log('started', e)
+    // const model = models.current.find(model => model.inputSource.handedness === e.controller.inputSource.handedness);
+    // model.setPose(HandPose.idle);
   })
 
   useXREvent('selectend', (e: XREvent) => {
     console.log('ENDED', e)
+    //     const model = models.current.find(model => model.inputSource.handedness === e.controller.inputSource.handedness);
+    // model.setPose(HandPose.select);
   })
 
   return null

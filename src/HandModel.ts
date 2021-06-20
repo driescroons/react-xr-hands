@@ -1,3 +1,4 @@
+import { XRController } from '@react-three/xr'
 import { Group, Mesh, Object3D, XRHandedness, XRInputSource } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
@@ -34,7 +35,6 @@ const XRHandJoints = [
   'pinky-finger-tip'
 ]
 
-const modelCache = new Map<XRHandedness, Object3D>()
 class HandModel extends Object3D {
   controller: Group
   bones: Object3D[] = []
@@ -48,41 +48,56 @@ class HandModel extends Object3D {
     this.controller = controller
     this.inputSource = inputSource
 
-    this.load()
+    // this.load()
+    // ;(window as any).getJoints = () => {
+    //   const joints = (this.controller as any).joints || []
+    //   console.log(joints, this.inputSource)
+    //   console.log(JSON.stringify(joints))
+    // }
   }
 
-  load() {
-    if (modelCache.has(this.inputSource.handedness)) {
-      const object = modelCache.get(this.inputSource.handedness)
-      this.init(object!)
-    } else {
-      const loader = new GLTFLoader()
-      loader.setPath(DEFAULT_HAND_PROFILE_PATH)
-      loader.load(`${this.inputSource.handedness}.glb`, (gltf) => {
-        const object = gltf.scene.children[0]
-        modelCache.set(this.inputSource.handedness, object)
-        this.init(object)
+  // onSelectStart = (e: Event & { data: XRInputSource; target: Group }) => {
+  //   console.log(this.inputSource, this.uuid, e.data.handedness, e.target.uuid)
+  //   if (this.inputSource.handedness === e.data.handedness) {
+  //     console.log('eventje gelegd', e)
+  //   }
+  // }
+
+  // if (!this.controller.hasEventListener('selectstart', this.onSelectStart)) {
+  //   console.log('registered event', this.inputSource)
+  //   this.controller.addEventListener('selectstart', this.onSelectStart)
+  // }
+
+  load(controller: Group, inputSource: XRInputSource) {
+    this.controller.remove(this)
+
+    this.controller = controller
+    this.inputSource = inputSource
+
+    super.clear()
+    const loader = new GLTFLoader()
+    loader.setPath(DEFAULT_HAND_PROFILE_PATH)
+    loader.load(`${this.inputSource.handedness}.glb`, (gltf) => {
+      const object = gltf.scene.children[0]
+      super.add(object)
+      const mesh = object.getObjectByProperty('type', 'SkinnedMesh')! as Mesh
+      mesh.frustumCulled = false
+      mesh.castShadow = true
+      mesh.receiveShadow = true
+      ;(mesh.material as any).side = 0 // Workaround: force FrontSide = 0
+
+      this.bones = []
+      XRHandJoints.forEach((jointName: string) => {
+        const bone = object.getObjectByName(jointName)
+        if (bone !== undefined) {
+          ;(bone as any).jointName = jointName
+        } else {
+          console.log(`Couldn't find ${jointName} in ${this.inputSource.handedness} hand mesh`)
+        }
+        this.bones.push(bone!)
       })
-    }
-  }
 
-  init(object: Object3D) {
-    super.add(object)
-    const mesh = object.getObjectByProperty('type', 'SkinnedMesh')! as Mesh
-    mesh.frustumCulled = false
-    mesh.castShadow = true
-    mesh.receiveShadow = true
-    ;(mesh.material as any).side = 0 // Workaround: force FrontSide = 0
-
-    this.bones = []
-    XRHandJoints.forEach((jointName: string) => {
-      const bone = object.getObjectByName(jointName)
-      if (bone !== undefined) {
-        ;(bone as any).jointName = jointName
-      } else {
-        console.log(`Couldn't find ${jointName} in ${this.inputSource.handedness} hand mesh`)
-      }
-      this.bones.push(bone!)
+      this.controller.add(this)
     })
   }
 
