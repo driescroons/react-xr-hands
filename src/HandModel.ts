@@ -192,11 +192,11 @@ class HandModel extends Object3D {
         // this.rotateOnAxis(new Vector3(0, 1, 0), -Math.PI / 2)
 
         // this.rotateX(Math.PI / 2)
-        this.setRotationFromEuler(new Euler(Math.PI / 2, -Math.PI / 2, 0))
+        this.model.setRotationFromEuler(new Euler(Math.PI / 2, -Math.PI / 2, 0))
 
         // only mirror the left one (this is also the right model here)
         if (this.inputSource.handedness === 'left') {
-          this.applyMatrix4(new Matrix4().makeScale(-1, 1, 1))
+          this.model.applyMatrix4(new Matrix4().makeScale(-1, 1, 1))
         }
       }
 
