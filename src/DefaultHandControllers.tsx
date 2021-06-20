@@ -1,7 +1,7 @@
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useXR, useXREvent, XREvent } from '@react-three/xr'
-import React, { useEffect, useRef, useState } from 'react'
-import { BoxBufferGeometry, Mesh } from 'three'
+import React, { useEffect, useRef } from 'react'
+import { BoxBufferGeometry, Euler, Matrix4, Mesh, MeshBasicMaterial, Object3D, Quaternion, XRHandJoint } from 'three'
 
 import { HandModel } from './HandModel'
 
@@ -49,6 +49,37 @@ export function DefaultHandControllers() {
     if (model) {
       model.setPose('pinch')
     }
+
+    let joints = isHandTracking
+      ? (e.controller.hand as any).joints
+      : (e.controller.controller as any).children
+          .find((child: Object3D) => child instanceof HandModel)
+          .bones.reduce((obj: XRHandJoint, bone: Object3D) => {
+            obj[(bone as any).jointName] = bone
+
+            return obj
+          }, {}) || {}
+
+    const indexTip = joints['index-finger-tip']
+    const thumbTip = joints['thumb-tip']
+    const distance = indexTip.position.distanceTo(thumbTip.position)
+    const position = indexTip.position.clone().add(thumbTip.position).multiplyScalar(0.5)
+
+    // WORKS!!
+    if (isHandTracking) {
+      meshRef.current!.position.copy(position)
+      meshRef.current!.quaternion.copy(e.controller.controller.getWorldQuaternion(new Quaternion()))
+    } else {
+      const newPosition = meshRef.current!.position.copy(position).applyEuler(new Euler(Math.PI / 2, -Math.PI / 2, 0))
+
+      if (e.controller.inputSource.handedness === 'left') {
+        newPosition.applyMatrix4(new Matrix4().makeScale(-1, 1, 1))
+      }
+
+      newPosition.applyMatrix4(e.controller.controller.matrixWorld)
+
+      meshRef.current!.position.copy(newPosition)
+    }
   })
 
   useXREvent('selectend', (e: XREvent) => {
@@ -58,5 +89,13 @@ export function DefaultHandControllers() {
     }
   })
 
-  return null
+  const meshRef = useRef<Mesh>()
+
+  const { scene } = useThree()
+
+  return (
+    <primitive object={scene}>
+      <mesh ref={meshRef} geometry={new BoxBufferGeometry(0.02, 0.02, 0.02)} material={new MeshBasicMaterial({ color: 'green' })} />
+    </primitive>
+  )
 }
